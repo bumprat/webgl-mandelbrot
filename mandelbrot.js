@@ -13,6 +13,7 @@ const Mandelbrot = function (element) {
         u_maxIter: { value: 1000 },
         domSize: new THREE.Vector2(),
         u_hueCycle: { value: 40 },
+        u_hueShift: {value: 0}
     };
     self.drawingCost = 0.0;
     self.init();
@@ -183,6 +184,10 @@ Mandelbrot.prototype.initGUI = function () {
         self.params.u_hueCycle.value = parseInt(value)
         self.draw()
     });
+    self.gui.add(self.params.u_hueShift, 'value', 0, 200, 1).name('color shift').listen().onChange(function (value) {
+        self.params.u_hueShift.value = parseInt(value)
+        self.draw()
+    });
     self.gui.add(self.params.u_maxIter, 'value', 1, 10000, 1).name('Max Iter').listen().onChange(function (value) {
         self.params.u_maxIter.value = parseInt(value)
         self.draw()
@@ -203,6 +208,7 @@ Mandelbrot.prototype.fragmentShaderSource = /*glsl*/`
     uniform vec2 u_resolution;
     uniform int u_maxIter;
     uniform int u_hueCycle;
+    uniform int u_hueShift;
 
     vec3 hsv2rgb(vec3 c) {
         vec4 K = vec4(1.0, 2.0/3.0, 1.0/3.0, 3.0);
@@ -225,8 +231,8 @@ Mandelbrot.prototype.fragmentShaderSource = /*glsl*/`
             x = xx;
             j = i;
         }
-        vec4 color1 = vec4(hsv2rgb(vec3(mod(float(j), float(u_hueCycle))/float(u_hueCycle), 1.0, 1.0)), 1.0);
-        vec4 color2 = vec4(hsv2rgb(vec3(mod(float(j+1), float(u_hueCycle))/float(u_hueCycle), 1.0, 1.0)), 1.0);
+        vec4 color1 = vec4(hsv2rgb(vec3(mod(float(j+u_hueShift), float(u_hueCycle))/float(u_hueCycle), 1.0, 1.0)), 1.0);
+        vec4 color2 = vec4(hsv2rgb(vec3(mod(float(j+u_hueShift+1), float(u_hueCycle))/float(u_hueCycle), 1.0, 1.0)), 1.0);
         float v = 1. - log(log(l)/log(4.))/log(2.);
         gl_FragColor = mix(color1, color2, v)
             * vec4(vec3(1.0-float(j>=u_maxIter-1)), 1.);
